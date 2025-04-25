@@ -1,4 +1,3 @@
-const { query } = require('../config/database');
 const bcrypt = require('bcrypt');
 
 async function authRoutes(fastify, options) {
@@ -7,28 +6,31 @@ async function authRoutes(fastify, options) {
     const { username, password } = request.body;
     
     try {
-      // Check if user exists
-      const userExists = await query(
-        'SELECT * FROM users WHERE username = $1',
-        [username]
-      );
+      // Check if user exists using Prisma
+      const existingUser = await fastify.prisma.user.findUnique({
+        where: { username }
+      });
 
-      if (userExists.rows.length > 0) {
+      if (existingUser) {
         return reply.code(400).send({ error: 'Username already exists' });
       }
 
       // Hash password
       const hashedPassword = await bcrypt.hash(password, 10);
 
-      // Create user
-      const result = await query(
-        'INSERT INTO users (username, password) VALUES ($1, $2) RETURNING id, username',
-        [username, hashedPassword]
-      );
+      // Create user using Prisma
+      const user = await fastify.prisma.user.create({
+        data: {
+          username,
+          password: hashedPassword
+        },
+        select: {
+          id: true,
+          username: true
+        }
+      });
 
-      const user = result.rows[0];
       const token = fastify.jwt.sign({ userId: user.id });
-
       return { token };
     } catch (error) {
       console.error('Registration error:', error);
@@ -44,16 +46,15 @@ async function authRoutes(fastify, options) {
     const { username, password } = request.body;
 
     try {
-      const result = await query(
-        'SELECT * FROM users WHERE username = $1',
-        [username]
-      );
+      // Find user using Prisma
+      const user = await fastify.prisma.user.findUnique({
+        where: { username }
+      });
 
-      if (result.rows.length === 0) {
+      if (!user) {
         return reply.code(401).send({ error: 'Invalid credentials' });
       }
 
-      const user = result.rows[0];
       const validPassword = await bcrypt.compare(password, user.password);
 
       if (!validPassword) {
