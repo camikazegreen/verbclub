@@ -11,6 +11,15 @@ build/
 dist/
 out/
 
+# Prisma generated files
+apps/api/generated/prisma/
+*.dll.node
+*.so.node
+*.dylib.node
+
+# Optional: ignore if copied schema from source
+apps/api/generated/prisma/schema.prisma
+
 # Environment files
 .env
 .env.local
@@ -36,4 +45,4 @@ yarn-error.log*
 .Spotlight-V100
 .Trashes
 ehthumbs.db
-Thumbs.db 
+Thumbs.db
