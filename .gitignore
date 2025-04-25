@@ -9,7 +9,34 @@ coverage/
 # Production
 build/
 dist/
+.next
 out/
+
+# Misc
+.DS_Store
+*.pem
+
+# Debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Local env files
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Prisma
+apps/api/prisma/.env
+apps/api/prisma/migrations
 
 # Prisma generated files
 apps/api/generated/prisma/
@@ -20,26 +47,7 @@ apps/api/generated/prisma/
 # Optional: ignore if copied schema from source
 apps/api/generated/prisma/schema.prisma
 
-# Environment files
-.env
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
-
-# Debug logs
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-
-# IDE and editor files
-.idea/
-.vscode/
-*.swp
-*.swo
-
 # OS generated files
-.DS_Store
 .DS_Store?
 ._*
 .Spotlight-V100
