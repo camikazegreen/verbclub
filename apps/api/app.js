@@ -1,7 +1,7 @@
 const path = require('path');
 const fs = require('fs');
 const initDatabase = require('./config/init-db');
-const prisma = require('./config/prisma');
+const db = require('./config/db');
 
 const fastify = require('fastify')({ 
     logger: {
@@ -26,8 +26,8 @@ const start = async () => {
         fastify.register(require('@fastify/cors'));
         fastify.register(require('./plugins/auth'));
 
-        // Decorate fastify instance with prisma
-        fastify.decorate('prisma', prisma);
+        // Decorate fastify instance with db
+        fastify.decorate('db', db);
 
         // Register routes
         fastify.register(require('./routes/auth'), { prefix: '/auth' });

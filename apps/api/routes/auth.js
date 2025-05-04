@@ -6,30 +6,26 @@ async function authRoutes(fastify, options) {
     const { username, password } = request.body;
     
     try {
-      // Check if user exists using Prisma
-      const existingUser = await fastify.prisma.user.findUnique({
-        where: { username }
-      });
+      // Check if user exists
+      const existingUser = await fastify.db.query(
+        'SELECT * FROM users WHERE username = $1',
+        [username]
+      );
 
-      if (existingUser) {
+      if (existingUser.rows.length > 0) {
         return reply.code(400).send({ error: 'Username already exists' });
       }
 
       // Hash password
       const hashedPassword = await bcrypt.hash(password, 10);
 
-      // Create user using Prisma
-      const user = await fastify.prisma.user.create({
-        data: {
-          username,
-          password: hashedPassword
-        },
-        select: {
-          id: true,
-          username: true
-        }
-      });
+      // Create user
+      const result = await fastify.db.query(
+        'INSERT INTO users (username, password) VALUES ($1, $2) RETURNING id, username',
+        [username, hashedPassword]
+      );
 
+      const user = result.rows[0];
       const token = fastify.jwt.sign({ userId: user.id });
       return { token };
     } catch (error) {
@@ -46,10 +42,13 @@ async function authRoutes(fastify, options) {
     const { username, password } = request.body;
 
     try {
-      // Find user using Prisma
-      const user = await fastify.prisma.user.findUnique({
-        where: { username }
-      });
+      // Find user
+      const result = await fastify.db.query(
+        'SELECT * FROM users WHERE username = $1',
+        [username]
+      );
+
+      const user = result.rows[0];
 
       if (!user) {
         return reply.code(401).send({ error: 'Invalid credentials' });
