@@ -134,3 +134,31 @@ The frontend is a simple Express server serving static files. To modify the fron
    - Check frontend logs: `docker logs verbclub-frontend`
    - Verify API connectivity
    - Check browser console for errors 
+
+## Available Scripts
+
+The API service includes several utility scripts in the `apps/api/scripts` directory:
+
+### Export Scripts
+
+1. **Export Areas to GeoJSON**
+   ```bash
+   docker-compose exec api node scripts/export.js
+   ```
+   This script exports all climbing areas to a GeoJSON file at `apps/api/scripts/areas.geojson`.
+   The output includes:
+   - Area geometry
+   - Area metadata (id, name, parent_id)
+   - Hierarchy level information
+
+2. **Generate Map Tiles**
+   ```bash
+   docker-compose exec api sh scripts/generate-tiles.sh
+   ```
+   This script generates vector tiles from the GeoJSON data using tippecanoe.
+   The tiles are saved to `apps/api/public/tiles/climbing.mbtiles` and include:
+   - Area boundaries
+   - Area properties (id, name, parent, level)
+   - Zoom levels from 4 to 14
+
+The generated tiles can be used with any map library that supports vector tiles (e.g., Mapbox GL JS, Leaflet with vector tile plugin). 
