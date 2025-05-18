@@ -2,7 +2,23 @@
 FROM node:18-alpine
 
 # Install build dependencies
-RUN apk add --no-cache python3 make g++
+RUN apk add --no-cache \
+    python3 \
+    make \
+    g++ \
+    git \
+    sqlite-dev \
+    zlib-dev \
+    build-base \
+    bash
+
+# Install tippecanoe
+RUN git clone https://github.com/felt/tippecanoe.git && \
+    cd tippecanoe && \
+    make -j$(nproc) && \
+    make install && \
+    cd .. && \
+    rm -rf tippecanoe
 
 # Create app directory
 WORKDIR /usr/src/app
