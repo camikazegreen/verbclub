@@ -1,0 +1,70 @@
+body, html {
+  margin: 0;
+  height: 100%;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+  color: #213547;
+  background-color: #ffffff;
+}
+
+.layout {
+  display: grid;
+  grid-template-areas:
+    "header header"
+    "sidebar main";
+  grid-template-columns: 300px 1fr;
+  grid-template-rows: auto 1fr;
+  height: 100vh;
+}
+
+.header {
+  grid-area: header;
+  background: #f4f4f4;
+  padding: 1rem;
+  border-bottom: 1px solid #e2e2e2;
+}
+
+.header h1 {
+  margin: 0;
+  font-size: 1.5rem;
+  color: #213547;
+}
+
+.header p {
+  margin: 0.5rem 0 0;
+  font-size: 1rem;
+  color: #666;
+}
+
+.sidebar {
+  grid-area: sidebar;
+  background: #e2e2e2;
+  padding: 1rem;
+  overflow-y: auto;
+  border-right: 1px solid #d2d2d2;
+}
+
+.main {
+  grid-area: main;
+  padding: 1rem;
+  overflow-y: auto;
+}
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0,0,0,0.4);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.modal {
+  background: white;
+  padding: 2rem;
+  border-radius: 0.5rem;
+  max-width: 400px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
