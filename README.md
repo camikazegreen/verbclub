@@ -1,6 +1,107 @@
 # Verb Club
 
-A full-stack application for planning activities with your friends.
+A platform for connecting people with activities and places.
+
+## 🏗️ Project Structure
+
+```
+verb-club/
+├── apps/
+│   ├── api/          # Fastify API server
+│   └── web/          # React frontend
+├── scripts/          # Database import/export scripts
+└── docker-compose.yml
+```
+
+## 🚀 Development Setup
+
+### Prerequisites
+- Node.js 18+
+- Docker and Docker Compose
+- PostgreSQL client (optional, for direct DB access)
+
+### Environment Variables
+Create a `.env` file in the root directory:
+```env
+# Database
+DB_USER=your_db_user
+DB_PASS=your_db_password
+DB_NAME=verbclub
+
+# API
+PORT=3000
+JWT_SECRET=your_jwt_secret
+```
+
+### Installation
+
+1. Install root dependencies:
+```bash
+npm install
+```
+
+2. Install frontend dependencies:
+```bash
+cd apps/web
+npm install
+```
+
+3. Install API dependencies:
+```bash
+cd apps/api
+npm install
+```
+
+## 🏃‍♂️ Running the Application
+
+### Development Mode (Recommended)
+
+1. Start the frontend development server:
+```bash
+cd apps/web
+npm run dev
+```
+The frontend will be available at http://localhost:5173
+
+2. In a separate terminal, start the API and database:
+```bash
+docker-compose up api db
+```
+The API will be available at http://localhost:3000
+
+### Production Mode
+
+To run everything in Docker containers:
+```bash
+docker-compose up
+```
+
+## 🔧 Available Scripts
+
+From the root directory:
+
+- `npm run dev:frontend` - Start frontend development server
+- `npm run dev:api` - Start API and database in Docker
+- `npm run dev` - Start both frontend and API (requires concurrently)
+- `npm run start` - Start all services in Docker
+- `npm run build` - Build all Docker containers
+- `npm run down` - Stop all Docker containers
+
+## 🗄️ Database
+
+The application uses PostgreSQL with PostGIS extension. The database runs in a Docker container and persists data in a Docker volume.
+
+To import sample data:
+```bash
+docker-compose run import
+```
+
+## 🛠️ Technology Stack
+
+- **Frontend**: React + Vite
+- **API**: Fastify
+- **Database**: PostgreSQL + PostGIS
+- **Containerization**: Docker + Docker Compose
 
 ## Prerequisites
 

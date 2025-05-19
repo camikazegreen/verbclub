@@ -40,7 +40,7 @@ services:
       dockerfile: Dockerfile
     container_name: verbclub-frontend
     ports:
-      - "8080:8080"
+      - "5173:8080"
     volumes:
       - ./apps/web:/usr/src/app
       - /usr/src/app/node_modules
