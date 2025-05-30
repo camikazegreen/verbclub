@@ -5,6 +5,7 @@ import MapView from './views/MapView'
 import CalendarView from './views/CalendarView'
 import PeopleView from './views/PeopleView'
 import Modal from './components/Modal'
+import { FiltersProvider } from './context/FiltersContext'
 
 export default function App() {
   const location = useLocation()
@@ -12,13 +13,15 @@ export default function App() {
 
   return (
     <>
-      <Layout>
-        <Routes location={location}>
-          <Route path="/" element={<MapView />} />
-          <Route path="/calendar" element={<CalendarView />} />
-          <Route path="/people" element={<PeopleView />} />
-        </Routes>
-      </Layout>
+      <FiltersProvider>
+        <Layout>
+          <Routes location={location}>
+            <Route path="/" element={<MapView />} />
+            <Route path="/calendar" element={<CalendarView />} />
+            <Route path="/people" element={<PeopleView />} />
+          </Routes>
+        </Layout>
+      </FiltersProvider>
 
       {modalRoutes.includes(location.pathname) && (
         <Modal>
