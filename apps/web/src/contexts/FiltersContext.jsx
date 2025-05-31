@@ -8,18 +8,25 @@ export function FiltersProvider({ children }) {
   const [selectedAreaId, setSelectedAreaId] = useState(null)
   const [areaInfo, setAreaInfo] = useState({})
 
-  // Fetch area info for the current visible areas
+  // Fetch area info for the current visible areas and selected area's ancestors
   useEffect(() => {
     const fetchAreaInfo = async () => {
-      if (!visibleAreas || visibleAreas.length === 0) {
+      // Always include selectedAreaId in the fetch if it exists
+      const idsToFetch = new Set(visibleAreas.map(a => a.id))
+      if (selectedAreaId) {
+        idsToFetch.add(selectedAreaId)
+      }
+      
+      if (idsToFetch.size === 0) {
         setAreaInfo({})
         return
       }
-      const ids = visibleAreas.map(a => a.id).join(',')
+
       try {
-        const res = await fetch(`/api/areas/info?ids=${ids}`)
+        const res = await fetch(`/api/areas/info?ids=${Array.from(idsToFetch).join(',')}`)
         if (!res.ok) throw new Error('Failed to fetch area info')
         const data = await res.json()
+        
         // Store as a map for easy lookup
         const infoMap = {}
         data.forEach(area => {
@@ -32,7 +39,7 @@ export function FiltersProvider({ children }) {
       }
     }
     fetchAreaInfo()
-  }, [visibleAreas])
+  }, [visibleAreas, selectedAreaId]) // Add selectedAreaId as a dependency
 
   return (
     <FiltersContext.Provider value={{
