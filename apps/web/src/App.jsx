@@ -5,13 +5,14 @@ import MapView from './views/MapView'
 import CalendarView from './views/CalendarView'
 import PeopleView from './views/PeopleView'
 import Modal from './components/Modal'
+import { FiltersProvider } from './contexts/FiltersContext'
 
 export default function App() {
   const location = useLocation()
   const modalRoutes = ['/login', '/profile']
 
   return (
-    <>
+    <FiltersProvider>
       <Layout>
         <Routes location={location}>
           <Route path="/" element={<MapView />} />
@@ -26,6 +27,6 @@ export default function App() {
           <p>This is a modal over the main content.</p>
         </Modal>
       )}
-    </>
+    </FiltersProvider>
   )
 } 

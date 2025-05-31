@@ -1,8 +1,13 @@
+import React from 'react'
+import { useFilters } from '../contexts/FiltersContext'
+import ContextualFiltersPane from './ContextualFiltersPane'
+
 export default function Sidebar() {
+  const { visibleAreas } = useFilters()
+
   return (
-    <div>
-      <h2>Contextual Filters</h2>
-      <p>This changes based on the main view.</p>
+    <div className="sidebar">
+      <ContextualFiltersPane />
     </div>
   )
 } 
