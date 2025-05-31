@@ -149,9 +149,8 @@ The application consists of three services:
    - Environment variables: Configured in `.env` file
 
 3. **Frontend**
-   - Container name: verbclub-frontend
-   - Port: 8080
-   - Framework: Express (serving static files)
+   - Runs on Vite dev server in development (http://localhost:5173)
+   - In production, can be built and served as static files (optionally with Express or Nginx)
 
 ## Quick Start
 
@@ -215,9 +214,9 @@ The API uses:
 
 ### Frontend Development
 
-The frontend is a simple Express server serving static files. To modify the frontend:
-1. Edit files in `apps/web/public`
-2. Changes will be reflected immediately due to volume mounting
+The frontend is a React app built with Vite. To modify the frontend:
+1. Edit files in `apps/web/src`
+2. Changes will be reflected immediately when running `npm run dev`
 
 ## Troubleshooting
 
