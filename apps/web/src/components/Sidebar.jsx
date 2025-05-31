@@ -1,18 +1,13 @@
 import React from 'react'
+import { useFilters } from '../contexts/FiltersContext'
 import ContextualFiltersPane from './ContextualFiltersPane'
-import { useFilters } from '../context/FiltersContext'
 
 export default function Sidebar() {
-  const { visibleAreas, hoveredId, selectedId, setHoveredId, setSelectedId } = useFilters()
+  const { visibleAreas } = useFilters()
 
   return (
-    <ContextualFiltersPane
-      title="Climbing Areas"
-      items={visibleAreas}
-      hoveredId={hoveredId}
-      selectedId={selectedId}
-      onHover={setHoveredId}
-      onClick={setSelectedId}
-    />
+    <div className="sidebar">
+      <ContextualFiltersPane />
+    </div>
   )
 } 

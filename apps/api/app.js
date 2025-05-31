@@ -32,10 +32,17 @@ const start = async () => {
         // Register routes
         fastify.register(require('./routes/auth'), { prefix: '/auth' });
         fastify.register(require('./routes/protected'), { prefix: '/api' });
+        fastify.register(require('./routes/areas'), { prefix: '/api/areas' });
 
         // Public route
         fastify.get('/', async (request, reply) => {
             return { message: 'Hello from Verb Club API' };
+        });
+
+        // Print all registered routes
+        fastify.ready(err => {
+            if (err) throw err;
+            console.log(fastify.printRoutes());
         });
 
         await fastify.listen({ port: process.env.PORT || 3000, host: '0.0.0.0' });
