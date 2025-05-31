@@ -6,11 +6,6 @@ import { useFilters } from '../contexts/FiltersContext'
 const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN
 const CUSTOM_STYLE = 'mapbox://styles/camikazegreen/cmb9irlzw012n01rfbsrn17rb'
 
-// Debug logging
-console.log('Mapbox GL JS version:', mapboxgl.version)
-console.log('All env variables:', import.meta.env)
-console.log('Token length:', MAPBOX_TOKEN?.length)
-
 export default function MapView() {
   const mapContainer = useRef(null)
   const map = useRef(null)
@@ -24,12 +19,10 @@ export default function MapView() {
   const updateVisibleAreas = () => {
     if (!map.current) return
     const features = map.current.queryRenderedFeatures({ layers: ['climbing-areas'] })
-    console.log('[updateVisibleAreas] visible features:', features.map(f => ({ id: f.properties.id, name: f.properties.name, parent: f.properties.parent })))
     const uniqueAreas = Array.from(new Map(features.map(f => [f.properties.id, {
       id: f.properties.id,
       name: f.properties.name
     }])).values())
-    console.log('[updateVisibleAreas] uniqueAreas:', uniqueAreas)
     setVisibleAreas(uniqueAreas)
   }
 
@@ -42,11 +35,6 @@ export default function MapView() {
       const feature = features.find(f => f.properties.id === propertiesId)
       
       if (feature) {
-        console.log(`Setting hover state for feature:`, {
-          internalId: feature.id,
-          propertiesId: propertiesId,
-          hover: hover
-        })
         map.current.setFeatureState(
           { source: 'composite', sourceLayer: 'climbing_areas', id: feature.id },
           { hover }
@@ -65,11 +53,6 @@ export default function MapView() {
       console.log('Map not initialized, skipping hover state update')
       return
     }
-    
-    console.log('Hover state changed:', {
-      previousId: lastHoveredId.current,
-      newId: hoveredId
-    })
     
     // Clear previous hover state
     if (lastHoveredId.current) {
@@ -115,13 +98,26 @@ export default function MapView() {
   // Expose zoomToArea for sidebar
   window.zoomToAreaById = (areaId) => {
     if (!map.current) return
-    const features = map.current.queryRenderedFeatures({ layers: ['climbing-areas'] })
-    const feature = features.find(f => f.properties.id === areaId)
-    if (feature) zoomToAreaBBox(areaId)
+    if (areaId === null) {
+      // Zoom out to show all level 0 areas
+      const level0Areas = Object.values(areaInfo).filter(a => a && a.level === 0 && a.bbox)
+      if (level0Areas.length > 0) {
+        let minLng = Infinity, minLat = Infinity, maxLng = -Infinity, maxLat = -Infinity
+        for (const area of level0Areas) {
+          const [lng1, lat1, lng2, lat2] = area.bbox
+          minLng = Math.min(minLng, lng1)
+          minLat = Math.min(minLat, lat1)
+          maxLng = Math.max(maxLng, lng2)
+          maxLat = Math.max(maxLat, lat2)
+        }
+        map.current.fitBounds([[minLng, minLat], [maxLng, maxLat]], { padding: 40, duration: 800 })
+      }
+    } else if (areaInfo[areaId] && areaInfo[areaId].bbox) {
+      zoomToAreaBBox(areaId)
+    }
   }
 
   useEffect(() => {
-    console.log('MapView useEffect running, map.current:', map.current ? 'exists' : 'null')
     
     // Guard against double mounting
     if (isMounted.current) {
@@ -147,9 +143,6 @@ export default function MapView() {
         setError('Your browser does not support WebGL, which is required for the map to work.')
         return
       }
-
-      // Verify style URL
-      console.log('Initializing map with style:', CUSTOM_STYLE)
       
       mapboxgl.accessToken = MAPBOX_TOKEN
       map.current = new mapboxgl.Map({
@@ -183,7 +176,6 @@ export default function MapView() {
 
       // Add style loading handlers
       map.current.on('style.load', () => {
-        console.log('Style loaded, setting up hover effect')
         const style = map.current.getStyle()
         setStyleLoaded(true)
 
@@ -218,20 +210,14 @@ export default function MapView() {
 
         // Log available sources and layers
         const style = map.current.getStyle()
-        console.log('Available sources:', Object.keys(style.sources || {}))
-        console.log('Available layers:', style.layers?.map(l => l.id))
 
         // Log climbing-areas layer definition
         const climbingLayer = style.layers?.find(l => l.id === 'climbing-areas')
-        console.log('climbing-areas layer definition:', climbingLayer)
         if (climbingLayer) {
-          console.log('climbing-areas source:', climbingLayer.source)
-          console.log('climbing-areas source-layer:', climbingLayer['source-layer'])
         }
 
         // Log features in climbing-areas layer
         const features = map.current.queryRenderedFeatures({ layers: ['climbing-areas'] })
-        console.log('Features in climbing-areas:', features)
 
         // Filter and log all climbing areas with level 0
         const level0Areas = features.filter(f => f.properties && f.properties.level === 0)
@@ -321,7 +307,6 @@ export default function MapView() {
 
     // Cleanup on unmount
     return () => {
-      console.log('MapView cleanup running')
       if (map.current) {
         try {
           map.current.remove()

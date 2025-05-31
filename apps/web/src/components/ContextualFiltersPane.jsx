@@ -1,4 +1,5 @@
 import React from 'react'
+import Breadcrumbs from './Breadcrumbs'
 import { useFilters } from '../contexts/FiltersContext'
 
 export default function ContextualFiltersPane() {
@@ -14,6 +15,7 @@ export default function ContextualFiltersPane() {
   return (
     <div className="contextual-filters-pane" style={{ background: '#fff', borderRight: '1px solid #eee', minWidth: 220, maxWidth: 300, overflow: 'hidden' }}>
       <h3 style={{ margin: '16px 0 12px 16px' }}>Areas</h3>
+      <Breadcrumbs />
       <div className="contextual-filters-content" style={{ padding: '0 16px 16px 16px' }}>
         {visibleAreas.length === 0 ? (
           <div style={{ color: '#888', fontStyle: 'italic' }}>No areas in view</div>
