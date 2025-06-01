@@ -131,12 +131,21 @@ async function insertArea(area, parentId = null) {
     const bbox = meta.bbox;
 
     try {
+        // Get parent's breadcrumb if parent exists
+        let breadcrumb = [area.id];
+        if (parentId) {
+            const parentResult = await query('SELECT breadcrumb FROM areas WHERE id = $1', [parentId]);
+            if (parentResult.rows[0]) {
+                breadcrumb = [...parentResult.rows[0].breadcrumb, area.id];
+            }
+        }
+
         // First, let's log what we're trying to insert
         console.log('Polygon data:', polygon);
         console.log('Bbox data:', bbox);
 
         const result = await query(
-            `INSERT INTO areas (id, name, description, parent_id, lat, lng, geometry, centroid, metadata, leaf, bbox)
+            `INSERT INTO areas (id, name, description, parent_id, lat, lng, geometry, centroid, metadata, leaf, bbox, breadcrumb)
              VALUES ($1, $2, $3, $4, $5, $6, 
                     CASE WHEN $7::jsonb IS NOT NULL THEN 
                          ST_SetSRID(ST_MakePolygon(ST_MakeLine(ARRAY[
@@ -155,7 +164,8 @@ async function insertArea(area, parentId = null) {
                         ST_MakePoint(${bbox[2]}, ${bbox[3]}),
                         ST_MakePoint(${bbox[0]}, ${bbox[3]}),
                         ST_MakePoint(${bbox[0]}, ${bbox[1]})
-                    ])), 4326)` : 'NULL'})
+                    ])), 4326)` : 'NULL'},
+                    $10)
              ON CONFLICT (id) DO UPDATE SET
                 name = EXCLUDED.name,
                 description = EXCLUDED.description,
@@ -166,7 +176,8 @@ async function insertArea(area, parentId = null) {
                 centroid = EXCLUDED.centroid,
                 metadata = EXCLUDED.metadata,
                 leaf = EXCLUDED.leaf,
-                bbox = EXCLUDED.bbox
+                bbox = EXCLUDED.bbox,
+                breadcrumb = EXCLUDED.breadcrumb
              RETURNING id, name;`,
             [
                 area.id,
@@ -177,7 +188,8 @@ async function insertArea(area, parentId = null) {
                 meta.lng,
                 JSON.stringify(polygon),
                 meta,
-                meta.leaf
+                meta.leaf,
+                breadcrumb
             ]
         );
         

@@ -13,6 +13,7 @@ module.exports = async function (fastify, opts) {
             id,
             name,
             parent_id,
+            breadcrumb,
             CASE
               WHEN bbox IS NOT NULL THEN
                 ARRAY[
@@ -35,6 +36,7 @@ module.exports = async function (fastify, opts) {
             a.id,
             a.name,
             a.parent_id,
+            a.breadcrumb,
             CASE
               WHEN a.bbox IS NOT NULL THEN
                 ARRAY[
