@@ -22,7 +22,7 @@ export default function ContextualFiltersPane() {
         ) : (
           <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
             {visibleAreas.map(area => (
-              <li key={area.id} style={{ marginBottom: 8 }}>
+              <li key={area.id}>
                 <button
                   type="button"
                   style={{

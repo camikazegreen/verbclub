@@ -4,23 +4,20 @@ import { useFilters } from '../contexts/FiltersContext'
 export default function Breadcrumbs() {
   const { selectedAreaId, setSelectedAreaId, areaInfo } = useFilters()
 
-  // Build the breadcrumb trail by walking up the parent chain from selectedAreaId
+  // Build the breadcrumb trail using the pre-computed breadcrumb array
   const trail = []
-  let currentId = selectedAreaId
-  console.log('Building breadcrumbs for selectedAreaId:', selectedAreaId)
-  console.log('Current areaInfo keys:', Object.keys(areaInfo))
-  console.log('Selected area in areaInfo:', areaInfo[selectedAreaId])
-  
-  while (currentId && areaInfo[currentId]) {
-    console.log('Processing currentId:', currentId)
-    console.log('Current area data:', areaInfo[currentId])
-    trail.unshift({ id: currentId, name: areaInfo[currentId].name })
-    currentId = areaInfo[currentId].parent_id
-    console.log('Next parent_id:', currentId)
+  if (selectedAreaId && areaInfo[selectedAreaId]) {
+    // Use the pre-computed breadcrumb array to build the trail
+    areaInfo[selectedAreaId].breadcrumb.forEach(id => {
+      if (id === selectedAreaId) {
+        trail.push({ id, name: areaInfo[selectedAreaId].name })
+      } else if (areaInfo[id]) {
+        trail.push({ id, name: areaInfo[id].name })
+      }
+    })
   }
   // Always start with Home
   trail.unshift({ id: null, name: 'Home' })
-  console.log('Built breadcrumb trail:', trail)
 
   const handleClick = (areaId) => {
     if (window.zoomToAreaById) {
