@@ -11,7 +11,7 @@ CREATE TABLE IF NOT EXISTS areas (
   name TEXT NOT NULL,
   description TEXT,
   parent_id TEXT REFERENCES areas(id) ON DELETE CASCADE,
-  breadcrumb TEXT[] NOT NULL DEFAULT ARRAY[id], -- Array of IDs from root to current area
+  breadcrumb TEXT[], -- Array of IDs from root to current area
 
   -- Center point (OpenBeta)
   lat DOUBLE PRECISION,
