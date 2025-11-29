@@ -6,10 +6,30 @@ import { useAuth } from '../contexts/AuthContext'
 import { getTimeReferenceTextAndDates } from '../utils/dateUtils'
 import './Header.css'
 
+// Format selected people names: "Chris", "Chris & Jordan", "Chris, Jordan & Ryan"
+function formatPeopleNames(people) {
+  if (!people || people.length === 0) {
+    return null
+  }
+  
+  if (people.length === 1) {
+    return people[0].name
+  }
+  
+  if (people.length === 2) {
+    return `${people[0].name} & ${people[1].name}`
+  }
+  
+  // 3 or more: "Chris, Jordan & Ryan"
+  const allButLast = people.slice(0, -1).map(p => p.name).join(', ')
+  const last = people[people.length - 1].name
+  return `${allButLast} & ${last}`
+}
+
 export default function Header() {
   const location = useLocation()
   const navigate = useNavigate()
-  const { selectedAreaId, areaInfo } = useFilters()
+  const { selectedAreaId, areaInfo, selectedPeople } = useFilters()
   const { timeReference } = useCalendar()
   const { isAuthenticated, user, logout } = useAuth()
   const [selections, setSelections] = useState({
@@ -51,6 +71,15 @@ export default function Header() {
       timeDates: dates
     }))
   }, [timeReference, selectedHour])
+
+  // Update people selection when selectedPeople changes
+  useEffect(() => {
+    const formattedNames = formatPeopleNames(selectedPeople)
+    setSelections(prev => ({
+      ...prev,
+      people: formattedNames || ''
+    }))
+  }, [selectedPeople])
 
   const getActiveSection = () => {
     const path = location.pathname

@@ -29,6 +29,7 @@ module.exports = async function (fastify, opts) {
   // ============================================
   // PEOPLE ROUTES
   // ============================================
+  // Note: More specific routes must be registered first
 
   // GET /api/people/me - Get current user's person record
   fastify.get('/me', {
@@ -58,27 +59,88 @@ module.exports = async function (fastify, opts) {
 
   // POST /api/people - Create a new person (for inviting non-users)
   // Can be called by authenticated users to create person records for invites
+  // Automatically creates a connection (friendship) between the creator and the new person
   fastify.post('/', {
     preHandler: [fastify.authenticate]
   }, async (request, reply) => {
     try {
       const { name, phone_number } = request.body;
+      const userId = request.user.userId;
 
       if (!name || !phone_number) {
         return reply.code(400).send({ error: 'Name and phone_number are required' });
       }
 
+      // Get current user's person_id
+      const personId = await getPersonIdForUser(fastify.db, userId);
+      if (!personId) {
+        return reply.code(404).send({ error: 'Person record not found for current user' });
+      }
+
       const normalizedPhone = normalizePhoneNumber(phone_number);
 
-      // Create person record (user_id will be NULL until they register)
-      const result = await fastify.db.query(
-        `INSERT INTO people (name, phone_number) 
-         VALUES ($1, $2) 
-         RETURNING id, name, phone_number, user_id, created_at, updated_at`,
-        [name, normalizedPhone]
+      // Check if person with this phone already exists
+      const existingPersonResult = await fastify.db.query(
+        'SELECT id FROM people WHERE phone_number = $1',
+        [normalizedPhone]
       );
 
-      return reply.code(201).send(result.rows[0]);
+      let newPersonId;
+      let personExisted = false;
+      let connectionExisted = false;
+      
+      if (existingPersonResult.rows.length > 0) {
+        // Person already exists, use existing person_id
+        newPersonId = existingPersonResult.rows[0].id;
+        personExisted = true;
+      } else {
+        // Create person record (user_id will be NULL until they register)
+        const result = await fastify.db.query(
+          `INSERT INTO people (name, phone_number) 
+           VALUES ($1, $2) 
+           RETURNING id, name, phone_number, user_id, created_at, updated_at`,
+          [name, normalizedPhone]
+        );
+        newPersonId = result.rows[0].id;
+      }
+
+      // Create bidirectional connection (friendship) between current user and new person
+      // Check if connection already exists
+      const existingConnection = await fastify.db.query(
+        `SELECT 1 FROM people_connections 
+         WHERE (person_id = $1 AND connected_person_id = $2)
+         OR (person_id = $2 AND connected_person_id = $1)`,
+        [personId, newPersonId]
+      );
+
+      if (existingConnection.rows.length > 0) {
+        connectionExisted = true;
+      } else {
+        // Create bidirectional connection
+        await fastify.db.query(
+          `INSERT INTO people_connections (person_id, connected_person_id, initiated_by_person_id, status)
+           VALUES ($1, $2, $1, 'connected'),
+                  ($2, $1, $1, 'connected')`,
+          [personId, newPersonId]
+        );
+      }
+
+      // Return the person record with metadata about what happened
+      const personResult = await fastify.db.query(
+        `SELECT id, name, phone_number, user_id, created_at, updated_at 
+         FROM people 
+         WHERE id = $1`,
+        [newPersonId]
+      );
+
+      return reply.code(201).send({
+        ...personResult.rows[0],
+        _meta: {
+          personExisted,
+          connectionExisted,
+          connectionCreated: !connectionExisted
+        }
+      });
     } catch (error) {
       fastify.log.error(error);
       reply.code(500).send({ error: 'Internal server error' });
@@ -142,6 +204,54 @@ module.exports = async function (fastify, opts) {
     }
   });
 
+  // GET /api/people - Get all people (excluding friends and those who block you)
+  // Must come after /me routes but before /:id route
+  fastify.get('/', {
+    preHandler: [fastify.authenticate]
+  }, async (request, reply) => {
+    try {
+      const userId = request.user.userId;
+      const personId = await getPersonIdForUser(fastify.db, userId);
+
+      if (!personId) {
+        return reply.code(404).send({ error: 'Person record not found' });
+      }
+
+      // Get all people excluding:
+      // 1. Current user
+      // 2. Friends (people in connections)
+      // 3. People who have blocked the current user
+      const result = await fastify.db.query(
+        `SELECT DISTINCT
+          p.id,
+          p.name,
+          p.phone_number,
+          p.user_id,
+          p.created_at,
+          p.updated_at
+         FROM people p
+         WHERE p.id != $1
+         AND p.id NOT IN (
+           SELECT connected_person_id 
+           FROM people_connections 
+           WHERE person_id = $1 AND status = 'connected'
+         )
+         AND p.id NOT IN (
+           SELECT person_id 
+           FROM people_blocks 
+           WHERE blocked_person_id = $1
+         )
+         ORDER BY p.name ASC`,
+        [personId]
+      );
+
+      return result.rows;
+    } catch (error) {
+      fastify.log.error(error);
+      reply.code(500).send({ error: 'Internal server error' });
+    }
+  });
+
   // GET /api/people/:id - Get a specific person
   fastify.get('/:id', {
     preHandler: [fastify.authenticate]
@@ -149,6 +259,7 @@ module.exports = async function (fastify, opts) {
     try {
       const personId = parseInt(request.params.id);
       const userId = request.user.userId;
+      const currentPersonId = await getPersonIdForUser(fastify.db, userId);
 
       const result = await fastify.db.query(
         `SELECT id, name, phone_number, user_id, created_at, updated_at 
@@ -164,13 +275,15 @@ module.exports = async function (fastify, opts) {
       const person = result.rows[0];
 
       // Check if current user is blocked by this person
-      const blockCheck = await fastify.db.query(
-        'SELECT 1 FROM people_blocks WHERE person_id = $1 AND blocked_person_id = $2',
-        [personId, userId]
-      );
+      if (currentPersonId) {
+        const blockCheck = await fastify.db.query(
+          'SELECT 1 FROM people_blocks WHERE person_id = $1 AND blocked_person_id = $2',
+          [personId, currentPersonId]
+        );
 
-      if (blockCheck.rows.length > 0) {
-        return reply.code(403).send({ error: 'Access denied' });
+        if (blockCheck.rows.length > 0) {
+          return reply.code(403).send({ error: 'Access denied' });
+        }
       }
 
       return person;
@@ -197,8 +310,9 @@ module.exports = async function (fastify, opts) {
       }
 
       // Get all connections (bidirectional - both directions)
+      // Use DISTINCT ON to avoid duplicates from bidirectional storage
       const result = await fastify.db.query(
-        `SELECT 
+        `SELECT DISTINCT ON (p.id)
           p.id, 
           p.name, 
           p.phone_number, 
@@ -215,7 +329,7 @@ module.exports = async function (fastify, opts) {
          )
          WHERE (pc.person_id = $1 OR pc.connected_person_id = $1)
          AND pc.status = 'connected'
-         ORDER BY pc.connected_at DESC`,
+         ORDER BY p.id, pc.connected_at DESC`,
         [personId]
       );
 

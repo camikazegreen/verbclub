@@ -7,6 +7,7 @@ export function FiltersProvider({ children }) {
   const [hoveredId, setHoveredId] = useState(null)
   const [selectedAreaId, setSelectedAreaId] = useState(null)
   const [areaInfo, setAreaInfo] = useState({})
+  const [selectedPeople, setSelectedPeople] = useState([])
 
   // Fetch area info for the current visible areas and selected area's ancestors
   useEffect(() => {
@@ -49,7 +50,9 @@ export function FiltersProvider({ children }) {
       setHoveredId,
       selectedAreaId,
       setSelectedAreaId,
-      areaInfo
+      areaInfo,
+      selectedPeople,
+      setSelectedPeople
     }}>
       {children}
     </FiltersContext.Provider>
