@@ -39,7 +39,7 @@ export function FiltersProvider({ children }) {
       }
     }
     fetchAreaInfo()
-  }, [visibleAreas, selectedAreaId]) // Add selectedAreaId as a dependency
+  }, [visibleAreas, selectedAreaId]) // Include selectedAreaId to fetch ancestors for breadcrumbs
 
   return (
     <FiltersContext.Provider value={{

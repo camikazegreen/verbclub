@@ -1,57 +1,81 @@
 import React from 'react'
 import Breadcrumbs from './Breadcrumbs'
 import { useFilters } from '../contexts/FiltersContext'
+import { useAreaStateService } from '../services/areaStateService'
 
 export default function ContextualFiltersPane() {
-  const { visibleAreas, hoveredId, setHoveredId, selectedAreaId, setSelectedAreaId } = useFilters()
+  const { visibleAreas, hoveredId, setHoveredId, selectedAreaId, areaInfo } = useFilters()
+  const { updateAreaState } = useAreaStateService()
 
   const handleAreaClick = (areaId) => {
     if (window.zoomToAreaById) {
       window.zoomToAreaById(areaId)
     }
-    setSelectedAreaId(areaId)
+    console.log('[ContextualFiltersPane] calling updateAreaState from sidebar with', areaId)
+    updateAreaState(areaId, 'sidebar')
   }
 
   return (
-    <div className="contextual-filters-pane" style={{ background: '#fff', borderRight: '1px solid #eee', minWidth: 220, maxWidth: 300, overflow: 'hidden' }}>
+    <div className="contextual-filters-pane" style={{ 
+      background: '#fff', 
+      borderRight: '1px solid #eee', 
+      width: '100%',
+      height: '100%',
+      display: 'flex',
+      flexDirection: 'column',
+      overflow: 'hidden'
+    }}>
       <h3 style={{ margin: '16px 0 12px 16px' }}>Areas</h3>
       <Breadcrumbs />
-      <div className="contextual-filters-content" style={{ padding: '0 16px 16px 16px' }}>
+      <div className="contextual-filters-content" style={{ 
+        padding: 0,
+        flex: 1,
+        overflowY: 'auto'
+      }}>
         {visibleAreas.length === 0 ? (
           <div style={{ color: '#888', fontStyle: 'italic' }}>No areas in view</div>
         ) : (
           <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
-            {visibleAreas.map(area => (
-              <li key={area.id}>
-                <button
-                  type="button"
-                  style={{
-                    width: '100%',
-                    padding: '8px 12px',
-                    background: area.id === selectedAreaId
-                      ? '#007bff'
-                      : area.id === hoveredId
-                      ? '#e6f0ff'
-                      : '#f7f7f7',
-                    color: area.id === selectedAreaId ? '#fff' : '#222',
-                    border: '1px solid #ddd',
-                    borderRadius: 4,
-                    cursor: 'pointer',
-                    textAlign: 'left',
-                    fontWeight: area.id === selectedAreaId ? 'bold' : 'normal',
-                    transition: 'background 0.2s',
-                    overflow: 'hidden',
-                    whiteSpace: 'nowrap',
-                    textOverflow: 'ellipsis',
-                  }}
-                  onMouseEnter={() => setHoveredId(area.id)}
-                  onMouseLeave={() => setHoveredId(null)}
-                  onClick={() => handleAreaClick(area.id)}
-                >
-                  {area.name}
-                </button>
-              </li>
-            ))}
+            {visibleAreas.map(area => {
+              // Use name from areaInfo if available (from database), otherwise fall back to map tile name
+              const displayName = areaInfo[area.id]?.name || area.name
+              return (
+                <li key={area.id}>
+                  <button
+                    type="button"
+                    style={{
+                      width: '100%',
+                      padding: '14px 16px',
+                      background: area.id === selectedAreaId
+                        ? '#000'
+                        : area.id === hoveredId
+                        ? '#000'
+                        : '#fff',
+                      color: area.id === selectedAreaId || area.id === hoveredId ? '#fff' : '#000',
+                      border: area.id === selectedAreaId 
+                        ? '2px solid #000'
+                        : area.id === hoveredId
+                        ? '1px solid #000'
+                        : '1px solid #000',
+                      borderRadius: 0,
+                      cursor: 'pointer',
+                      textAlign: 'left',
+                      fontWeight: area.id === selectedAreaId ? 'bold' : '500',
+                      fontSize: '16px',
+                      transition: 'all 0.15s ease',
+                      overflow: 'hidden',
+                      whiteSpace: 'nowrap',
+                      textOverflow: 'ellipsis',
+                    }}
+                    onMouseEnter={() => setHoveredId(area.id)}
+                    onMouseLeave={() => setHoveredId(null)}
+                    onClick={() => handleAreaClick(area.id)}
+                  >
+                    {displayName}
+                  </button>
+                </li>
+              )
+            })}
           </ul>
         )}
       </div>

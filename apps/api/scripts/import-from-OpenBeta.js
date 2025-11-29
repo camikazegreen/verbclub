@@ -107,13 +107,19 @@ async function fetchAreaByName(name) {
             body: JSON.stringify(queryBody)
         });
 
+        const json = await res.json();
+        
         if (!res.ok) {
+            console.error('HTTP error response:', JSON.stringify(json, null, 2));
             throw new Error(`HTTP error! status: ${res.status}`);
         }
-
-        const json = await res.json();
-        if (json.errors) throw new Error(JSON.stringify(json.errors));
-        return json.data.areas;
+        
+        if (json.errors) {
+            console.error('GraphQL errors:', JSON.stringify(json.errors, null, 2));
+            throw new Error(JSON.stringify(json.errors));
+        }
+        
+        return json.data.areas || [];
     } catch (error) {
         console.error('Error fetching area:', error);
         throw error;
@@ -127,8 +133,8 @@ async function insertArea(area, parentId = null) {
     }
 
     const meta = area.metadata || {};
-    const polygon = meta.polygon;
-    const bbox = meta.bbox;
+    const geojsonPolygon = validateAndFormatGeometry(meta.polygon);
+    const geojsonBbox = validateAndFormatBbox(meta.bbox);
 
     try {
         // Get parent's breadcrumb if parent exists
@@ -140,32 +146,14 @@ async function insertArea(area, parentId = null) {
             }
         }
 
-        // First, let's log what we're trying to insert
-        console.log('Polygon data:', polygon);
-        console.log('Bbox data:', bbox);
-
         const result = await query(
             `INSERT INTO areas (id, name, description, parent_id, lat, lng, geometry, centroid, metadata, leaf, bbox, breadcrumb)
-             VALUES ($1, $2, $3, $4, $5, $6, 
-                    CASE WHEN $7::jsonb IS NOT NULL THEN 
-                         ST_SetSRID(ST_MakePolygon(ST_MakeLine(ARRAY[
-                            ${polygon ? polygon.map(coord => `ST_MakePoint(${coord[0]}, ${coord[1]})`).join(', ') : ''}
-                         ])), 4326)
-                    ELSE NULL END,
-                    CASE WHEN $7::jsonb IS NOT NULL THEN 
-                         ST_Centroid(ST_SetSRID(ST_MakePolygon(ST_MakeLine(ARRAY[
-                            ${polygon ? polygon.map(coord => `ST_MakePoint(${coord[0]}, ${coord[1]})`).join(', ') : ''}
-                         ])), 4326))
-                    ELSE NULL END,
+             VALUES ($1, $2, $3, $4, $5, $6,
+                    ST_SetSRID(ST_GeomFromGeoJSON($7), 4326),
+                    ST_Centroid(ST_SetSRID(ST_GeomFromGeoJSON($7), 4326)),
                     $8, $9,
-                    ${bbox ? `ST_SetSRID(ST_MakePolygon(ST_MakeLine(ARRAY[
-                        ST_MakePoint(${bbox[0]}, ${bbox[1]}),
-                        ST_MakePoint(${bbox[2]}, ${bbox[1]}),
-                        ST_MakePoint(${bbox[2]}, ${bbox[3]}),
-                        ST_MakePoint(${bbox[0]}, ${bbox[3]}),
-                        ST_MakePoint(${bbox[0]}, ${bbox[1]})
-                    ])), 4326)` : 'NULL'},
-                    $10)
+                    ST_SetSRID(ST_GeomFromGeoJSON($10), 4326),
+                    $11)
              ON CONFLICT (id) DO UPDATE SET
                 name = EXCLUDED.name,
                 description = EXCLUDED.description,
@@ -186,9 +174,10 @@ async function insertArea(area, parentId = null) {
                 parentId,
                 meta.lat,
                 meta.lng,
-                JSON.stringify(polygon),
+                geojsonPolygon,
                 meta,
                 meta.leaf,
+                geojsonBbox,
                 breadcrumb
             ]
         );
@@ -271,7 +260,7 @@ async function processAreaRecursively(areaName, parentId = null, depth = 0) {
     }
 
     try {
-        console.log(`\n🔍 Fetching area: ${areaName}`);
+        console.log(`\n🔍 Fetching area by name: ${areaName}`);
         const areas = await fetchAreaByName(areaName);
         if (!areas || areas.length === 0) {
             console.log('No areas found');
@@ -304,12 +293,33 @@ async function processAreaRecursively(areaName, parentId = null, depth = 0) {
 }
 
 async function main() {
+    // Get area ID from command line argument
+    const areaId = process.argv[2];
+    if (!areaId) {
+        console.error('Error: Area ID is required');
+        console.error('Usage: node import-from-OpenBeta.js <area_id>');
+        console.error('Example: node import-from-OpenBeta.js 63689d20e80bff5a994f241f');
+        process.exit(1);
+    }
+
     const client = await pool.connect();
     try {
         await client.query('BEGIN');
         const result = await client.query('SELECT NOW()');
         console.log('Database connection successful:', result.rows[0].now);
-        await processAreaRecursively('Mount Lemmon (Catalina Highway)');
+        
+        // Look up the area name from the database
+        const areaResult = await client.query('SELECT name FROM areas WHERE id = $1', [areaId]);
+        if (areaResult.rows.length === 0) {
+            console.error(`Error: Area with ID ${areaId} not found in database`);
+            process.exit(1);
+        }
+        const areaName = areaResult.rows[0].name;
+        console.log(`Found area: ${areaName} (${areaId})`);
+        console.log(`Starting import for area: ${areaName}`);
+        
+        // Query OpenBeta by name instead of ID
+        await processAreaRecursively(areaName, null, 0);
         await client.query('COMMIT');
     } catch (error) {
         await client.query('ROLLBACK');

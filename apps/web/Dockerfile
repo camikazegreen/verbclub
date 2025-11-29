@@ -1,6 +1,10 @@
 # Build stage
 FROM node:18-alpine as build
 
+# Accept build argument for Mapbox token
+ARG VITE_MAPBOX_TOKEN
+ENV VITE_MAPBOX_TOKEN=$VITE_MAPBOX_TOKEN
+
 WORKDIR /usr/src/app
 
 # Copy package files

@@ -1,0 +1,47 @@
+.calendar-view {
+  background-color: #ffffff;
+  height: 100%;
+  width: 100%;
+}
+
+.calendar-scroll-container {
+  /* Smooth scrolling */
+  scroll-behavior: smooth;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.calendar-table {
+  width: 100%;
+  min-height: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+  display: table;
+}
+
+
+.calendar-table tbody {
+  display: table-row-group;
+}
+
+/* Each row maintains consistent height based on viewport (5 weeks visible) */
+/* This ensures all weeks are the same size, whether visible or not */
+.calendar-table tbody tr {
+  display: table-row;
+  height: calc((100vh - var(--header-height, 60px) - var(--month-nav-height, 60px)) / 5);
+  min-height: calc((100vh - var(--header-height, 60px) - var(--month-nav-height, 60px)) / 5);
+  transition: height 0.25s ease, min-height 0.25s ease;
+}
+
+/* Zoomed week row: takes up ~80% of available vertical space */
+.calendar-table tbody tr.zoomed-week {
+  height: calc((100vh - var(--header-height, 60px) - var(--month-nav-height, 60px)) * 0.8);
+  min-height: calc((100vh - var(--header-height, 60px) - var(--month-nav-height, 60px)) * 0.8);
+}
+
+.calendar-month-nav {
+  /* Month navigation styles */
+  flex-shrink: 0;
+}
+
