@@ -66,8 +66,12 @@ body, html {
 
 .modal {
   background: white;
-  padding: 2rem;
+  padding: 0;
   border-radius: 0.5rem;
   max-width: 400px;
   box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+.modal:not(.no-padding) {
+  padding: 2rem;
 }

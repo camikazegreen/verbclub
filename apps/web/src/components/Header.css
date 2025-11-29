@@ -7,6 +7,13 @@
   box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
+.header-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
 .header h1 {
   font-size: 2.5rem;
   margin-bottom: 1rem;
@@ -47,4 +54,48 @@
   color: #1d4ed8;
   border-bottom-style: solid;
   border-bottom-color: #1d4ed8;
+}
+
+.header-auth {
+  display: flex;
+  align-items: center;
+}
+
+.header-login,
+.header-logout {
+  padding: 0.5rem 1rem;
+  border: 1px solid #2563eb;
+  border-radius: 6px;
+  background: white;
+  color: #2563eb;
+  cursor: pointer;
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.header-login:hover {
+  background: #2563eb;
+  color: white;
+}
+
+.header-user {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.header-user span {
+  font-size: 0.875rem;
+  color: #666;
+}
+
+.header-logout {
+  border-color: #dc2626;
+  color: #dc2626;
+}
+
+.header-logout:hover {
+  background: #dc2626;
+  color: white;
 } 

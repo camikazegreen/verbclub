@@ -1,0 +1,116 @@
+.people-view {
+  width: 100%;
+  height: 100%;
+  overflow-y: auto;
+  padding: 2rem;
+  background: #f9f9f9;
+}
+
+.people-view-content {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.people-view-message {
+  text-align: center;
+  padding: 3rem 1rem;
+  color: #666;
+}
+
+.people-view-message .error {
+  color: #c33;
+}
+
+.people-section {
+  margin-bottom: 3rem;
+}
+
+.people-section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid #e2e2e2;
+}
+
+.people-section-heading {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #213547;
+  margin: 0;
+}
+
+.people-add-button {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 2px solid #2563eb;
+  background: white;
+  color: #2563eb;
+  font-size: 1.5rem;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  padding: 0;
+}
+
+.people-add-button:hover {
+  background: #2563eb;
+  color: white;
+  transform: scale(1.1);
+}
+
+.people-empty {
+  color: #666;
+  font-style: italic;
+  padding: 1rem 0;
+}
+
+.people-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+.person-card {
+  background: white;
+  border: 1px solid #e2e2e2;
+  border-radius: 8px;
+  padding: 1rem;
+  transition: all 0.2s;
+  cursor: pointer;
+}
+
+.person-card:hover {
+  border-color: #2563eb;
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.1);
+  transform: translateY(-2px);
+}
+
+.person-card.selected {
+  border-color: #2563eb;
+  background-color: #e7f3ff;
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.2);
+}
+
+.person-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.person-name {
+  font-weight: 500;
+  color: #213547;
+  font-size: 1rem;
+}
+
+.person-phone {
+  font-size: 0.875rem;
+  color: #666;
+}
+
