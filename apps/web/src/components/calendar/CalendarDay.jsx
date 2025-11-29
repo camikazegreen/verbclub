@@ -108,6 +108,15 @@ export default function CalendarDay({
     return isDateSelected && selectedHour === hour
   }
 
+  // Calculate sunrise/sunset percentages for 24-hour day
+  // Hardcoded for Tucson: sunrise 7:05am, sunset 5:18pm
+  // 7:05am = 7.083 hours = 29.51% of 24h
+  // 5:18pm = 17.3 hours = 72.08% of 24h
+  const sunrisePct = '29.5%'
+  const sunsetPct = '72%'
+  const dawnBandPct = '2%' // 2% band around sunrise
+  const duskBandPct = '3%' // 3% band around sunset
+
   return (
     <td
       id={dateId}
@@ -115,6 +124,12 @@ export default function CalendarDay({
       onClick={handleClick}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
+      style={{
+        '--sunrise-pct': sunrisePct,
+        '--sunset-pct': sunsetPct,
+        '--dawn-band-pct': dawnBandPct,
+        '--dusk-band-pct': duskBandPct
+      }}
     >
       <a 
         href={`#date-${dateId}`}

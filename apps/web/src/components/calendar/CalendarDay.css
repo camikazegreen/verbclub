@@ -130,6 +130,7 @@
   transform: translateY(4px);
 }
 
+
 .hour-slot {
   font-size: 0.75rem;
   padding: 2px 0;
@@ -141,6 +142,9 @@
   display: flex;
   align-items: flex-start; /* align text to top of each hour slot */
   min-height: 0;          /* allow flex items to shrink below content size */
+  background: transparent; /* transparent so it sits on the sky gradient */
+  position: relative;
+  cursor: pointer;
 }
 
 /* When the week is zoomed, fade in the hours list */
@@ -155,14 +159,17 @@
   min-height: 0; /* allow flex item to shrink below content size */
 }
 
-/* Selected day: invert hours styling to match dark background */
-.calendar-day.selected.zoomed-week-cell .hours-list {
-  border-top-color: rgba(255, 255, 255, 0.25);
+
+/* Hour slots in zoomed week cells - ensure text is visible on gradient */
+.calendar-day.zoomed-week-cell .hour-slot {
+  border-bottom-color: rgba(0, 0, 0, 0.1);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3); /* subtle shadow for readability */
 }
 
 .calendar-day.selected.zoomed-week-cell .hour-slot {
   color: #ffffff;
   border-bottom-color: rgba(255, 255, 255, 0.18);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5); /* stronger shadow on dark background */
 }
 
 /* On hover over selected day, subtly invert emphasis on hour slots */
@@ -182,27 +189,48 @@
   font-weight: 600;
 }
 
-.hour-slot {
-  cursor: pointer;
+/* Date header background for selected zoomed week cells - solid night color */
+.calendar-day.selected.zoomed-week-cell .day-link {
+  background-color: #050816; /* deep navy background for entire link area */
 }
 
-/* Sunrise / sunset gradient for selected days in zoomed week
-   Approximate sunrise at 7am and sunset at 7pm over a 24h vertical column */
-.calendar-day.selected.zoomed-week-cell {
-  /* Base dark background underneath the gradient */
-  background-color: #050816 !important;
+.calendar-day.selected.zoomed-week-cell .mon-div,
+.calendar-day.selected.zoomed-week-cell .day-div {
+  background-color: #050816; /* deep navy to match night */
+  position: relative;
+  z-index: 1; /* Ensure header is above gradient */
+}
+
+.calendar-day.selected.zoomed-week-cell .mon-div {
+  padding-bottom: 0.25rem;
+}
+
+.calendar-day.selected.zoomed-week-cell .day-div {
+  padding-bottom: 0.25rem;
+}
+
+/* 24-hour sky gradient for selected zoomed week cells - applied to hours list only
+   Uses CSS variables for sunrise/sunset percentages */
+.calendar-day.selected.zoomed-week-cell .hours-list {
+  border-top: none; /* Remove border since gradient provides visual separation */
+  margin-top: 0.5rem; /* Space between header and hours list */
   background-image: linear-gradient(
     to bottom,
-    #050816 0%,       /* night */
-    #050816 28%,      /* up to ~7am (7/24 ≈ 29%) */
-    #f6c270 30%,      /* sunrise band (warm) */
-    #a6e3ff 40%,      /* early day – soft azure */
-    #5bc0ff 60%,      /* midday – stronger azure */
-    #a6e3ff 70%,      /* late day – soft azure again */
-    #f6c270 72%,      /* sunset band (warm) */
-    #050816 100%      /* night */
+    #050816 0%,                    /* night top - deeper navy */
+    #050816 var(--sunrise-pct, 29.5%),  /* night up to sunrise */
+    #4a2c5a calc(var(--sunrise-pct, 29.5%) + 1%),  /* dawn start - purple */
+    #8b4a6b calc(var(--sunrise-pct, 29.5%) + 1.5%), /* dawn mid - rose */
+    #d97757 calc(var(--sunrise-pct, 29.5%) + 2%),  /* dawn end - orange */
+    #a6e3ff calc(var(--sunrise-pct, 29.5%) + 2.5%), /* day start - soft blue */
+    #87ceeb var(--sunset-pct, 72%),  /* day - soft blue continues */
+    #ff8c42 calc(var(--sunset-pct, 72%) + 1%),  /* dusk start - orange */
+    #8b4a6b calc(var(--sunset-pct, 72%) + 2%),  /* dusk mid - purple */
+    #4a2c5a calc(var(--sunset-pct, 72%) + 3%),  /* dusk end - deeper purple */
+    #050816 100%                    /* night bottom - deeper navy */
   );
   background-size: cover;
   background-repeat: no-repeat;
+  background-position: center;
+  padding-top: 0.25rem;
 }
 
