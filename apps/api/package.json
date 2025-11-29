@@ -6,7 +6,7 @@
   "scripts": {
     "start": "node app.js",
     "dev": "nodemon app.js",
-    "import": "node scripts/import.js",
+    "import": "node scripts/import-from-OpenBeta.js",
     "export": "node scripts/export.js"
   },
   "keywords": [],

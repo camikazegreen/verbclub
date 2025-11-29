@@ -1,0 +1,208 @@
+.calendar-day {
+  position: relative;
+  padding: 0;
+  border: 1px solid #e2e2e2;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+  display: table-cell;
+  width: calc(100% / 7);
+  vertical-align: top;
+  overflow: hidden;
+}
+
+.calendar-day:hover:not(.selected) {
+  background-color: #f5f5f5;
+}
+
+.calendar-day.hovered:not(.selected) {
+  background-color: #e8f4f8;
+}
+
+.calendar-day.selected {
+  background-color: #1a1a1a !important;
+  color: #ffffff !important;
+  border-color: #1a1a1a !important;
+}
+
+.calendar-day.selected .mon-div,
+.calendar-day.selected .day-div {
+  color: #ffffff !important;
+}
+
+.calendar-day.selected:hover {
+  background-color: #2d2d2d !important;
+  border-color: #2d2d2d !important;
+}
+
+.calendar-day.in-range {
+  background-color: #cfe2ff;
+}
+
+.calendar-day.in-range.selected {
+  background-color: #1a1a1a !important;
+  color: #ffffff !important;
+}
+
+.calendar-day.in-range.selected .mon-div,
+.calendar-day.in-range.selected .day-div {
+  color: #ffffff !important;
+}
+
+.calendar-day.today {
+  border: 2px solid #007bff;
+  font-weight: bold;
+}
+
+.calendar-day.past-day {
+  opacity: 0.5;
+  color: #999;
+}
+
+.calendar-day.past-day:hover {
+  opacity: 0.7;
+}
+
+.day-link {
+  display: flex;
+  height: 100%;
+  min-height: 100%;
+  padding: 0.5rem;
+  text-decoration: none;
+  color: inherit;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: flex-start;
+  box-sizing: border-box;
+}
+
+.mon-div {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  color: #666;
+  margin-bottom: 0.25rem;
+  flex-shrink: 0; /* Don't shrink the date header */
+}
+
+.day-div {
+  font-size: 1.25rem;
+  font-weight: 500;
+  color: #213547;
+  flex-shrink: 0; /* Don't shrink the date header */
+}
+
+.calendar-day.odd-month:not(.selected) {
+  background-color: #fafafa;
+}
+
+.calendar-day.even-month:not(.selected) {
+  background-color: #ffffff;
+}
+
+/* Ensure zoomed week cells stretch to full row height */
+.calendar-day.zoomed-week-cell {
+  height: 100%;
+  min-height: 100%;
+  vertical-align: top;
+  position: relative;
+}
+
+/* Make the day-link fill the entire cell height for zoomed cells */
+.calendar-day.zoomed-week-cell .day-link {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: auto;
+  min-height: 100%;
+}
+
+/* Hours list inside a zoomed week day cell */
+.hours-list {
+  width: 100%;
+  margin-top: 0.5rem;
+  padding-top: 0.25rem;
+  border-top: 1px solid #e2e2e2;
+  opacity: 0;
+  max-height: 0;
+  overflow: hidden;
+  transition: opacity 0.2s ease, max-height 0.2s ease, transform 0.2s ease;
+  transform: translateY(4px);
+}
+
+.hour-slot {
+  font-size: 0.75rem;
+  padding: 2px 0;
+  border-bottom: 1px solid #f0f0f0;
+  color: #333;
+  text-align: left;
+  width: 100%;
+  flex: 1 1 0;            /* each hour row grows to share vertical space equally, base size 0 */
+  display: flex;
+  align-items: flex-start; /* align text to top of each hour slot */
+  min-height: 0;          /* allow flex items to shrink below content size */
+}
+
+/* When the week is zoomed, fade in the hours list */
+.calendar-day.zoomed-week-cell .hours-list {
+  opacity: 1;
+  max-height: none; /* remove height restriction */
+  transform: translateY(0);
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 0; /* grow to fill remaining space, base size 0 */
+  align-items: stretch;
+  min-height: 0; /* allow flex item to shrink below content size */
+}
+
+/* Selected day: invert hours styling to match dark background */
+.calendar-day.selected.zoomed-week-cell .hours-list {
+  border-top-color: rgba(255, 255, 255, 0.25);
+}
+
+.calendar-day.selected.zoomed-week-cell .hour-slot {
+  color: #ffffff;
+  border-bottom-color: rgba(255, 255, 255, 0.18);
+}
+
+/* On hover over selected day, subtly invert emphasis on hour slots */
+.calendar-day.selected.zoomed-week-cell .hour-slot:hover {
+  background-color: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+}
+
+/* Selected hour styling */
+.hour-slot.selected-hour {
+  background-color: rgba(255, 255, 255, 0.2);
+  font-weight: 600;
+}
+
+.calendar-day.selected.zoomed-week-cell .hour-slot.selected-hour {
+  background-color: rgba(255, 255, 255, 0.25);
+  font-weight: 600;
+}
+
+.hour-slot {
+  cursor: pointer;
+}
+
+/* Sunrise / sunset gradient for selected days in zoomed week
+   Approximate sunrise at 7am and sunset at 7pm over a 24h vertical column */
+.calendar-day.selected.zoomed-week-cell {
+  /* Base dark background underneath the gradient */
+  background-color: #050816 !important;
+  background-image: linear-gradient(
+    to bottom,
+    #050816 0%,       /* night */
+    #050816 28%,      /* up to ~7am (7/24 ≈ 29%) */
+    #f6c270 30%,      /* sunrise band (warm) */
+    #a6e3ff 40%,      /* early day – soft azure */
+    #5bc0ff 60%,      /* midday – stronger azure */
+    #a6e3ff 70%,      /* late day – soft azure again */
+    #f6c270 72%,      /* sunset band (warm) */
+    #050816 100%      /* night */
+  );
+  background-size: cover;
+  background-repeat: no-repeat;
+}
+

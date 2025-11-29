@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react'
 import mapboxgl from 'mapbox-gl'
 import 'mapbox-gl/dist/mapbox-gl.css'
 import { useFilters } from '../contexts/FiltersContext'
+import { useAreaStateService } from '../services/areaStateService'
 
 const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN
 const CUSTOM_STYLE = 'mapbox://styles/camikazegreen/cmb9irlzw012n01rfbsrn17rb'
@@ -12,8 +13,10 @@ export default function MapView() {
   const [error, setError] = useState(null)
   const [styleLoaded, setStyleLoaded] = useState(false)
   const isMounted = useRef(false)
-  const { setVisibleAreas, hoveredId, setHoveredId, selectedAreaId, setSelectedAreaId, areaInfo } = useFilters()
+  const { setVisibleAreas, hoveredId, setHoveredId, selectedAreaId, areaInfo } = useFilters()
   const lastHoveredId = useRef(null)
+  const { updateAreaState } = useAreaStateService()
+  const mountId = useRef(Math.random().toString(36).substr(2, 5))
 
   // Helper to update visible areas based on selected area
   const updateVisibleAreas = () => {
@@ -23,6 +26,8 @@ export default function MapView() {
       id: f.properties.id,
       name: f.properties.name
     }])).values())
+    // Sort by name alphabetically with natural number sorting
+    uniqueAreas.sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' }))
     setVisibleAreas(uniqueAreas)
   }
 
@@ -118,7 +123,6 @@ export default function MapView() {
   }
 
   useEffect(() => {
-    
     // Guard against double mounting
     if (isMounted.current) {
       console.log('Component already mounted, skipping initialization')
@@ -176,13 +180,23 @@ export default function MapView() {
 
       // Add style loading handlers
       map.current.on('style.load', () => {
-        const style = map.current.getStyle()
         setStyleLoaded(true)
+      })
 
-        // Update climbing-areas layer for hover effect
+      map.current.on('style.error', (e) => {
+        console.error('Style loading error:', e)
+        setError('Error loading map style: ' + e.message)
+      })
+
+      // Add load event handler
+      map.current.on('load', () => {
+        console.log(`[MapView][${mountId.current}] Map loaded, setting up filters and hover events. selectedAreaId:`, selectedAreaId, 'map.current:', !!map.current)
+        
+        // Set up hover effect
+        const style = map.current.getStyle()
         const climbingLayerIndex = style.layers.findIndex(l => l.id === 'climbing-areas')
         if (climbingLayerIndex !== -1) {
-          console.log('Setting up hover effect for climbing-areas layer')
+          console.log(`[MapView][${mountId.current}] Setting up hover effect for climbing-areas layer. selectedAreaId:`, selectedAreaId)
           map.current.setPaintProperty(
             'climbing-areas',
             'fill-color',
@@ -196,25 +210,6 @@ export default function MapView() {
         } else {
           console.error('climbing-areas layer not found in style')
         }
-      })
-
-      map.current.on('style.error', (e) => {
-        console.error('Style loading error:', e)
-        setError('Error loading map style: ' + e.message)
-      })
-
-      // Add load event handler
-      map.current.on('load', () => {
-        console.log('Map loaded, setting up filters and hover events')
-        map.current.setFilter('climbing-areas', ['==', ['get', 'level'], 0])
-
-        // Log available sources and layers
-        const style = map.current.getStyle()
-
-        // Log climbing-areas layer definition
-        const climbingLayer = style.layers?.find(l => l.id === 'climbing-areas')
-        if (climbingLayer) {
-        }
 
         // Log features in climbing-areas layer
         const features = map.current.queryRenderedFeatures({ layers: ['climbing-areas'] })
@@ -226,7 +221,9 @@ export default function MapView() {
           id: f.properties.id,
           name: f.properties.name
         }])).values())
-        console.log('Setting visible areas from map load event:', uniqueAreas)
+        // Sort by name alphabetically
+        uniqueAreas.sort((a, b) => a.name.localeCompare(b.name))
+        console.log(`[MapView][${mountId.current}] Setting visible areas from map load event:`, uniqueAreas, 'selectedAreaId:', selectedAreaId)
         setVisibleAreas(uniqueAreas)
       })
 
@@ -250,6 +247,13 @@ export default function MapView() {
             lastFeatureId = featureId
           }
           map.current.getCanvas().style.cursor = 'pointer'
+        } else {
+          // No features under cursor, clear hover
+          if (lastFeatureId !== null) {
+            setHoveredId(null)
+            lastFeatureId = null
+          }
+          map.current.getCanvas().style.cursor = ''
         }
       })
       map.current.on('mouseleave', 'climbing-areas', (e) => {
@@ -284,7 +288,9 @@ export default function MapView() {
             map.current.fitBounds([[minLng, minLat], [maxLng, maxLat]], { padding: 40, duration: 800 })
           }
 
-          setSelectedAreaId(featureId)
+          // Use area state service to update state
+          console.log('[MapView] calling updateAreaState from map-click with', featureId)
+          updateAreaState(featureId, 'map-click')
         }
       })
 
