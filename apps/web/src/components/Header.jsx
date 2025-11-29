@@ -2,6 +2,7 @@ import { useLocation, useNavigate } from 'react-router-dom'
 import { useState, useEffect } from 'react'
 import { useFilters } from '../contexts/FiltersContext'
 import { useCalendar } from '../contexts/CalendarContext'
+import { useAuth } from '../contexts/AuthContext'
 import { getTimeReferenceTextAndDates } from '../utils/dateUtils'
 import './Header.css'
 
@@ -10,6 +11,7 @@ export default function Header() {
   const navigate = useNavigate()
   const { selectedAreaId, areaInfo } = useFilters()
   const { timeReference } = useCalendar()
+  const { isAuthenticated, user, logout } = useAuth()
   const [selections, setSelections] = useState({
     activity: '',
     location: '',
@@ -95,25 +97,41 @@ export default function Header() {
     )
   }
 
+  const handleLoginClick = () => {
+    navigate('/login', { state: { from: location } })
+  }
+
   return (
     <header className="header">
-      <h1>
-        <button 
-          onClick={() => navigate('/')}
-          style={{
-            background: 'none',
-            border: 'none',
-            padding: 0,
-            cursor: 'pointer',
-            fontSize: 'inherit',
-            color: 'inherit',
-            fontFamily: 'inherit',
-            fontWeight: 'inherit'
-          }}
-        >
-          Verb Club
-        </button>
-      </h1>
+      <div className="header-top">
+        <h1>
+          <button 
+            onClick={() => navigate('/')}
+            style={{
+              background: 'none',
+              border: 'none',
+              padding: 0,
+              cursor: 'pointer',
+              fontSize: 'inherit',
+              color: 'inherit',
+              fontFamily: 'inherit',
+              fontWeight: 'inherit'
+            }}
+          >
+            Verb Club
+          </button>
+        </h1>
+        <div className="header-auth">
+          {isAuthenticated ? (
+            <div className="header-user">
+              <span>{user?.username || 'User'}</span>
+              <button onClick={logout} className="header-logout">Logout</button>
+            </div>
+          ) : (
+            <button onClick={handleLoginClick} className="header-login">Login</button>
+          )}
+        </div>
+      </div>
       <p className="mad-libs">
         I want to {selections.activity ? 'go ' : ''}{renderInteractivePart('activity', 'do something')}{' '}
         {renderInteractivePart('location', 'somewhere')}{' '}

@@ -31,8 +31,10 @@ const start = async () => {
 
         // Register routes
         fastify.register(require('./routes/auth'), { prefix: '/auth' });
+        fastify.register(require('./routes/oauth'), { prefix: '/auth' });
         fastify.register(require('./routes/protected'), { prefix: '/api' });
         fastify.register(require('./routes/areas'), { prefix: '/api/areas' });
+        fastify.register(require('./routes/people'), { prefix: '/api/people' });
 
         // Public route
         fastify.get('/', async (request, reply) => {

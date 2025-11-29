@@ -1,7 +1,7 @@
-export default function Modal({ children }) {
+export default function Modal({ children, className = '' }) {
   return (
     <div className="modal-overlay">
-      <div className="modal">
+      <div className={`modal ${className}`}>
         {children}
       </div>
     </div>
